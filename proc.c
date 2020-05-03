@@ -538,3 +538,20 @@ getyear(void)
 {
   return 2020;
 }
+
+int
+getchildren(int pid)
+{
+
+    struct proc *p;
+    int count = 0;
+
+    acquire(&ptable.lock);
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      if(p->parent->pid == pid) count++;
+
+    release(&ptable.lock);
+
+    return count;
+}

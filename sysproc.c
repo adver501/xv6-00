@@ -95,3 +95,9 @@ sys_getyear(void)
 {
   return getyear();
 }
+
+int
+sys_getchildren(void)
+{
+  return getchildren(myproc()->pid);
+}
