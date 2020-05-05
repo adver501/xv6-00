@@ -545,12 +545,26 @@ getchildren(int pid)
 
     struct proc *p;
     int count = 0;
+    char ch[16];
 
     acquire(&ptable.lock);
 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-      if(p->parent->pid == pid) count++;
-
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent->pid == pid){ 
+        count++;
+        if(count > 1){
+          // cprintf(0);
+          // cprintf("%d",p->pid);
+          strncpy(ch, "0", 2);
+        }
+        if (count == 1)
+        {
+          strncpy(ch, "children pid: ", 15);
+          // cprintf("children pid:%s%d", ch, p->pid);
+        }
+        cprintf("%s%d", ch, p->pid);
+      }
+    }
     release(&ptable.lock);
 
     return count;
