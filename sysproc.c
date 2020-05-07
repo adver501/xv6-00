@@ -65,13 +65,13 @@ sys_sleep(void)
   if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
-  ticks0 = ticks;
-  while(ticks - ticks0 < n){
+  ticks0 = QTM;
+  while(QTM - ticks0 < n){
     if(myproc()->killed){
       release(&tickslock);
       return -1;
     }
-    sleep(&ticks, &tickslock);
+    sleep(&QTM, &tickslock);
   }
   release(&tickslock);
   return 0;
@@ -85,7 +85,7 @@ sys_uptime(void)
   uint xticks;
 
   acquire(&tickslock);
-  xticks = ticks;
+  xticks = QTM;
   release(&tickslock);
   return xticks;
 }
@@ -100,4 +100,10 @@ int
 sys_getchildren(void)
 {
   return getchildren(myproc()->pid);
+}
+
+int
+sys_changepolicy(void)
+{
+  return 0;
 }

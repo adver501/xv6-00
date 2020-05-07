@@ -25,6 +25,7 @@ int sleep(int);
 int uptime(void);
 int getyear(void);
 int getchildren(void);
+int changepolicy(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

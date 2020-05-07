@@ -122,6 +122,7 @@ void            wakeup(void*);
 void            yield(void);
 int             getyear(void);
 int             getchildren(int);
+int             changepolicy(void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -164,6 +165,7 @@ void            timerinit(void);
 // trap.c
 void            idtinit(void);
 extern uint     ticks;
+extern uint     QTM;
 void            tvinit(void);
 extern struct spinlock tickslock;
 

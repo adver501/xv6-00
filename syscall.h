@@ -22,3 +22,4 @@
 #define SYS_close  21
 #define SYS_getyear 22
 #define SYS_getchildren 23
+#define SYS_changepolicy 24

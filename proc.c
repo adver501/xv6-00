@@ -542,7 +542,6 @@ getyear(void)
 int
 getchildren(int pid)
 {
-
     struct proc *p;
     int count = 0;
     char ch[16];
@@ -568,4 +567,10 @@ getchildren(int pid)
     release(&ptable.lock);
 
     return count;
+}
+
+int
+changepolicy(void)
+{
+  return 0;
 }
