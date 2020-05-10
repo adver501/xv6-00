@@ -122,7 +122,8 @@ void            wakeup(void*);
 void            yield(void);
 int             getyear(void);
 int             getchildren(int);
-int             changepolicy(void);
+void            changepolicy(void);
+int             changepriority(int pid, int priority);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

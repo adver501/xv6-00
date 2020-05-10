@@ -105,5 +105,18 @@ sys_getchildren(void)
 int
 sys_changepolicy(void)
 {
+  changepolicy();
   return 0;
+}
+
+int
+sys_changepriority()
+{
+  int pid, proy;
+  if(argint(0, &pid) < 0)
+    return -1;
+  if(argint(1, &proy) < 0)
+    return -1;
+  
+  return changepriority(pid, proy);
 }
