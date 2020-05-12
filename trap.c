@@ -52,10 +52,19 @@ trap(struct trapframe *tf)
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
       acquire(&tickslock);
-      // ticks++;
-      QTM += 2;
-      wakeup(&QTM);
+      ticks++;
+      // QTM += 2;
+      wakeup(&ticks);
+      // wakeup(&QTM);
       release(&tickslock);
+
+      if(myproc()) {
+        if(myproc()->state == RUNNING)
+          myproc()->rutime++;
+        else if(myproc()->state == SLEEPING)
+          myproc()->sltime++;
+      }
+      
     }
     lapiceoi();
     break;

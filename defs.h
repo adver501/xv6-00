@@ -124,6 +124,7 @@ int             getyear(void);
 int             getchildren(int);
 void            changepolicy(void);
 int             changepriority(int pid, int priority);
+int             waitForChiled(int *watime, int *rutime);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

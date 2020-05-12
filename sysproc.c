@@ -110,7 +110,7 @@ sys_changepolicy(void)
 }
 
 int
-sys_changepriority()
+sys_changepriority(void)
 {
   int pid, proy;
   if(argint(0, &pid) < 0)
@@ -119,4 +119,19 @@ sys_changepriority()
     return -1;
   
   return changepriority(pid, proy);
+}
+
+int
+sys_waitForChiled(void)
+{
+  int *watime;
+  int *rutime;
+  
+  if(argptr(0, (char**)&watime, sizeof(int)) < 0)
+    return 12;
+
+  if(argptr(1, (char**)&rutime, sizeof(int)) < 0)
+    return 13;
+
+  return waitForChiled(watime,rutime);
 }

@@ -24,3 +24,4 @@
 #define SYS_getchildren 23
 #define SYS_changepolicy 24
 #define SYS_changepriority    25
+#define SYS_waitForChiled  26

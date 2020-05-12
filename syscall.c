@@ -106,7 +106,8 @@ extern int sys_uptime(void);
 extern int sys_getyear(void);
 extern int sys_getchildren(void);
 extern int sys_changepolicy(void);
-extern int sys_changepriority();
+extern int sys_changepriority(void);
+extern int sys_waitForChiled(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -134,6 +135,7 @@ static int (*syscalls[])(void) = {
 [SYS_getchildren] sys_getchildren,
 [SYS_changepolicy] sys_changepolicy,
 [SYS_changepriority]     sys_changepriority,
+[SYS_waitForChiled]   sys_waitForChiled,
 };
 
 void

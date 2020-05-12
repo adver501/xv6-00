@@ -27,6 +27,7 @@ int getyear(void);
 int getchildren(void);
 int changepolicy(void);
 int changepriority(int pid, int priority);
+int waitForChiled(int *watime, int *rutime);
 
 // ulib.c
 int stat(const char*, struct stat*);
