@@ -1,3 +1,4 @@
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID
@@ -51,12 +52,26 @@ struct proc {
   char name[16];               // Process name (debugging)
   int priority;
   int changablePriority;
+  int queueIndex;
+  int ticks[3];
+  int currTicks;
   int crtime;
   int rutime;
   int sltime;
   // int waitingtime;
   int tetime;
+  int printSys;		       // 0 not printing, 1 printing
+  int sysCalls;		       // num of syscalls total
 };
+
+// struct {
+//   struct spinlock *lock;
+//   struct proc proc[NPROC];
+//   // Three queues, associating with each priority level
+//   struct proc* que[3][NPROC];
+//   //three numbers, associating with the number of processes in each queue
+//   int priCount[3];
+// }ptable;
 
 // Process memory is laid out contiguously, low addresses first:
 //   text

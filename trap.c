@@ -13,8 +13,9 @@ struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
-// uint t = QUANTUM;
 uint QTM = QUANTUM;
+extern void resetchangablePriority();
+
 
 void
 tvinit(void)
@@ -53,6 +54,9 @@ trap(struct trapframe *tf)
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
+
+      // if (ticks % 20 == 0)
+      //   resetchangablePriority();
       // QTM += 2;
       wakeup(&ticks);
       // wakeup(&QTM);
@@ -116,7 +120,7 @@ trap(struct trapframe *tf)
   // If interrupts were on while locks held, would need to check nlock.
   if(myproc() && myproc()->state == RUNNING &&
      tf->trapno == T_IRQ0+IRQ_TIMER){
-      myproc()->changablePriority += myproc()->priority;
+      // myproc()->changablePriority += myproc()->priority;
       yield();
   }
   // Check if the process has been killed since we yielded

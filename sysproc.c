@@ -135,3 +135,18 @@ sys_waitForChiled(void)
 
   return waitForChiled(watime,rutime);
 }
+
+int
+sys_trace(void)
+{
+  int x;
+  if(argint(0, &x) < 0){
+    return -1; // error
+  }
+  if(x == 0){
+    myproc()->printSys = 0;
+  }else{
+    myproc()->printSys = 1;
+  }
+  return myproc()->sysCalls;
+}

@@ -10,6 +10,10 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  // // Three queues, associating with each priority level
+  // struct proc* que[3][NPROC];
+  // //three numbers, associating with the number of processes in each queue
+  // int priCount[3];
 } ptable;
 
 static struct proc *initproc;
@@ -20,10 +24,15 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+int wake[] = {0,0,0};
+
 void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
+  // ptable.priCount[0] = -1;
+  // ptable.priCount[1] = -1;
+  // ptable.priCount[2] = -1;
 }
 
 // Must be called with interrupts disabled
@@ -89,7 +98,15 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->priority = 1;  //default priority
-  p->changablePriority = 3;  //equal to priority at first(Default)
+  p->changablePriority = 0;  //equal to priority at first(Default)
+  p->queueIndex = 0;
+  int i;
+  for (i=0; i<3; i++)
+  {
+    p->ticks[i] = 0;
+  }
+  // p->currTicks = 0;
+  wake[0] = 1;
   p->crtime = ticks;
   p->tetime = 0;
   p->rutime = 0;
@@ -118,10 +135,14 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
-  p->crtime = ticks;
-  p->tetime = 0;
-  p->rutime = 0;
-  p->sltime=0;
+  // p->queueIndex = 0;
+  // p->crtime = ticks;
+  // p->tetime = 0;
+  // p->rutime = 0;
+  // p->sltime=0;
+
+  p->printSys = 0;
+  p->sysCalls = 0;
 
   return p;
 }
@@ -158,6 +179,9 @@ userinit(void)
   // writes to be visible, and the lock is also needed
   // because the assignment might not be atomic.
   acquire(&ptable.lock);
+
+  // ptable.priCount[0]++;
+  // ptable.que[0][ptable.priCount[0]] = p;
 
   p->state = RUNNABLE;
 
@@ -224,6 +248,9 @@ fork(void)
   pid = np->pid;
 
   acquire(&ptable.lock);
+
+  // ptable.priCount[0]++;
+  // ptable.que[0][ptable.priCount[0]] = np;
 
   np->state = RUNNABLE;
 
@@ -339,12 +366,116 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+	int limit[] = {5,10,20};
+	int count = 0;
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
+    acquire(&ptable.lock);
+	int qindex;
+	for(qindex = 0; qindex < 3; qindex++) {
+		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+			int i;
+			if(qindex != 0) {
+				
+				for(i = 0; i<qindex;i++) {
+					if(wake[i]) {
+						wake[i] = 0;
+						qindex = i-1;
+						break;
+					}
+				}
+					
+			}
+			if(p->state != RUNNABLE)
+        continue;
+			if(p->queueIndex == qindex) {
+				
+
+				c->proc = p;
+				int j;
+               
+				for(j = p->changablePriority; j <limit[qindex]; j++) {
+          if(qindex != 0) {
+            for(i = 0; i<qindex;i++) {
+              if(wake[i]) 
+                break;
+            
+            }
+          }
+					
+      		switchuvm(p);
+      		p->state = RUNNING;
+      		swtch(&(c->scheduler), p->context);
+      		switchkvm();
+				
+					p->ticks[qindex]++;
+          p->changablePriority += p->priority;
+                   
+					// p->ran = 1;
+					count ++;
+					
+					if(count == 100) {
+							struct proc *tmp;
+							for(tmp = ptable.proc; tmp < &ptable.proc[NPROC]; tmp++){
+								if(tmp-> state != RUNNABLE || tmp->queueIndex == 0 /*|| tmp->ran ==1*/ ) {
+									// tmp->ran = 0;
+								  continue;
+								}
+								if(tmp->queueIndex == 3) {
+
+									}
+								tmp->queueIndex --;
+								tmp->changablePriority = 0;
+								if(tmp->queueIndex < qindex) {
+									wake[tmp->queueIndex] = 1;
+								}
+							}
+							count = 0;
+					}
+					if(p->state != RUNNABLE) {
+
+						break;
+					}
+				}
+				
+				if(j == limit[qindex]) {
+						if(p->queueIndex <2) {
+							p->queueIndex++;
+						}
+            p->changablePriority = 0;
+				}
+			}
+
+				c->proc = 0;
+		}
+			
+	}	
+    
+			
+
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      
+
+    release(&ptable.lock);
+
+/*  struct proc *p;
+  // struct proc *p1;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+  
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
@@ -353,6 +484,7 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      // cprintf("pid: %s // ", p->state);
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
@@ -364,7 +496,79 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
-    release(&ptable.lock);
+*/
+/*
+    struct proc *highp;
+
+    // Loop over process table looking for process to run.
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      // ptable.priCount[0]++;
+      // ptable.que[0][ptable.priCount[0]] = p;
+      cprintf("pid: %s // ", p->state);
+      
+    }
+    
+    int queueIndex;
+    for(queueIndex = 0; queueIndex <= PRIORITY_MAX; queueIndex++) {
+      int j = 0;
+      cprintf( "queueIndex: %d\n priCount: %d\n", queueIndex, ptable.priCount[queueIndex] );
+      while(ptable.priCount[queueIndex] >= -1) {
+        if(j == ptable.priCount[queueIndex]){
+          break;
+        }
+
+        // if(ptable.que[queueIndex][j]->state != RUNNABLE)
+        //   continue;
+        
+        j++;
+        highp = ptable.que[queueIndex][0];
+        int lasti = 0;
+        int i;
+        
+        for(i = 0; i < ptable.priCount[queueIndex]; i++){
+          // if(ptable.que[queueIndex][i]->state != RUNNABLE || ptable.que[queueIndex][i]->queueIndex != queueIndex){
+          //   continue;
+          // }
+          p1 = ptable.que[queueIndex][i];
+          if(highp->changablePriority > p1->changablePriority){
+            highp = p1;
+            lasti = i;
+          }
+        }
+        
+        p = highp;
+
+        ptable.que[queueIndex][lasti] = ptable.que[queueIndex][0];
+        ptable.que[queueIndex][0] = p;
+        
+        for (i = 0; i < ptable.priCount[queueIndex]; i++) {
+          ptable.que[queueIndex][i] = ptable.que[queueIndex][i + 1];
+        }
+        ptable.priCount[queueIndex]--;
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(c->proc);
+        p->state = RUNNING;
+
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+
+        // queueIndex = 0;
+        if (c->proc->queueIndex < 2)
+          c->proc->queueIndex++;
+        ptable.priCount[c->proc->queueIndex]++;
+        ptable.que[c->proc->queueIndex][ptable.priCount[c->proc->queueIndex]] = c->proc;
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+      }
+    }
+*/
+    // release(&ptable.lock);
 
   }
 }
@@ -400,6 +604,12 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+
+  // if (myproc()->queueIndex < 2)
+  //   myproc()->queueIndex++;
+  // ptable.priCount[myproc()->queueIndex]++;
+  // ptable.que[myproc()->queueIndex][ptable.priCount[myproc()->queueIndex]] = myproc();
+
   myproc()->state = RUNNABLE;
   sched();
   release(&ptable.lock);
@@ -474,8 +684,15 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
+    if(p->state == SLEEPING && p->chan == chan){
+
+      // ptable.priCount[p->queueIndex]++;
+      // ptable.que[p->queueIndex][ptable.priCount[p->queueIndex]] = p;
+
       p->state = RUNNABLE;
+
+      wake[p->queueIndex] = 1;
+    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -500,8 +717,13 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
+      if(p->state == SLEEPING){
+        
+        // ptable.priCount[p->queueIndex]++;
+        // ptable.que[p->queueIndex][ptable.priCount[p->queueIndex]] = p;
+        
         p->state = RUNNABLE;
+      }
       release(&ptable.lock);
       return 0;
     }
@@ -622,7 +844,7 @@ getchildren(int pid)
       }
     }
     release(&ptable.lock);
-
+    // exit();
     return count;
 }
 
@@ -718,3 +940,34 @@ waitForChiled(int *watime, int *rutime)
   }
 
 }
+
+// void
+// resetchangablePriority(void) {
+//   struct proc *p;
+//   acquire(&ptable.lock);
+//   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+//       if (p->state == RUNNABLE) {
+//           //delete the runnable process from its original queue
+//           int token;
+//           for (token = 0; token < NPROC; token++) {
+//               if (p == ptable.que[p->changablePriority][token]) {
+//                   int i;
+//                   for (i = token; i < ptable.priCount[p->changablePriority]; i++) {
+//                       ptable.que[p->changablePriority][i] = ptable.que[p->changablePriority][i + 1];
+//                   }
+//                   ptable.priCount[p->changablePriority]--;
+//               }
+//               break;
+//           }
+//           //set the priority to 0, and add it to the first queue
+//           p->changablePriority = 0;
+//           ptable.priCount[0]++;
+//           ptable.que[0][ptable.priCount[0]] = p;
+//       } else {
+//           //queues only contain process that are runnable, so change the priority is enough.
+//           p->changablePriority = 0;
+//       }
+//   }
+//   release(&ptable.lock);
+// }
+

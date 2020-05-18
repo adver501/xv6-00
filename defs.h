@@ -123,8 +123,8 @@ void            yield(void);
 int             getyear(void);
 int             getchildren(int);
 void            changepolicy(void);
-int             changepriority(int pid, int priority);
-int             waitForChiled(int *watime, int *rutime);
+int             changepriority(int, int);
+int             waitForChiled(int *, int *);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

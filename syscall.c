@@ -108,6 +108,7 @@ extern int sys_getchildren(void);
 extern int sys_changepolicy(void);
 extern int sys_changepriority(void);
 extern int sys_waitForChiled(void);
+extern int sys_trace(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -136,6 +137,7 @@ static int (*syscalls[])(void) = {
 [SYS_changepolicy] sys_changepolicy,
 [SYS_changepriority]     sys_changepriority,
 [SYS_waitForChiled]   sys_waitForChiled,
+[SYS_trace]   sys_trace,
 };
 
 void

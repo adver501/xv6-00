@@ -25,3 +25,4 @@
 #define SYS_changepolicy 24
 #define SYS_changepriority    25
 #define SYS_waitForChiled  26
+#define SYS_trace  27

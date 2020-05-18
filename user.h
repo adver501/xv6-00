@@ -28,6 +28,7 @@ int getchildren(void);
 int changepolicy(void);
 int changepriority(int pid, int priority);
 int waitForChiled(int *watime, int *rutime);
+int trace(int x);
 
 // ulib.c
 int stat(const char*, struct stat*);
